@@ -1,0 +1,77 @@
+# Single source of truth for the energy-expenditure pipeline.
+#
+# Python reads this file directly. scripts/gen_headers.py turns it into
+# firmware/include/PipelineConfig.h. Edit it here, then regenerate the headers
+# and re-flash. Anything that changes the features (filter, bins, detector,
+# mount, IMU order) changes the feature hash, and the firmware refuses to
+# compile against weights trained with a different hash.
+version: 1
+
+sampling:
+  fs_hz: 100
+
+# Fixed order = channel order = feature order. Do not reorder without retraining.
+# bus:  0 = Wire (SDA 18 / SCL 19), 1 = Wire1 (SDA 17 / SCL 16), 2 = Wire2 (SDA 25 / SCL 24)
+# mux:  PCA9548 address on that bus, or null if the IMU is wired straight to the bus
+# addr: ICM-20948 address, 0x69 by default on the Adafruit breakout (0x68 with the jumper)
+imus:
+  - {name: forearm,   bus: 0, mux: 0x70, channel: 0, addr: 0x69}
+  - {name: upper_arm, bus: 0, mux: 0x70, channel: 1, addr: 0x69}
+  - {name: chest,     bus: 0, mux: 0x70, channel: 2, addr: 0x69}
+  - {name: thigh,     bus: 1, mux: 0x70, channel: 0, addr: 0x69}
+  - {name: shank,     bus: 1, mux: 0x70, channel: 1, addr: 0x69}
+
+icm20948:
+  i2c_hz: 400000
+  accel_fs_g: 8        # 2 | 4 | 8 | 16
+  gyro_fs_dps: 2000    # 250 | 500 | 1000 | 2000
+  dlpf_cfg: 4          # 4 = ~24 Hz 3 dB bandwidth on accel and gyro (anti-aliasing for 100 Hz)
+  odr_div: 4           # sensor output rate = 1125 / (1 + odr_div) Hz = 225 Hz
+
+# Sensor frame -> segment frame (x along the segment, y anterior, z mediolateral).
+# Signed permutation matrices with det = +1, applied identically to accel and gyro.
+# Identity until each housing's orientation has been checked on the body.
+mount:
+  forearm:   [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+  upper_arm: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+  chest:     [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+  thigh:     [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+  shank:     [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+
+calibration:
+  still_s: 3.0                # sit still on the erg at power-on; gyro bias = mean over this window
+  max_still_gyro_std: 0.05    # rad/s; if any gyro axis moves more, the window is retried
+
+filter:
+  order: 4                    # Butterworth low-pass, causal, same coefficients on Teensy and in Python
+  cutoff_hz: 6.0
+
+detector:
+  imu: shank
+  axis: gz                    # segment-frame axis; sagittal-plane rotation of the shank
+  sign: 1                     # flip to -1 if the leg drive comes out as a negative peak
+  thr_min: 1.0                # rad/s; floor for the adaptive threshold, set from pilot data
+  thr_frac: 0.5               # thr = max(thr_min, thr_frac * median(last 5 accepted peaks))
+  hyst: 0.5                   # a peak is confirmed once the signal falls below hyst * thr
+  min_stroke_s: 1.2           # 50 spm
+  max_stroke_s: 5.0           # 12 spm
+
+features:
+  bins: 30                    # Slade's value; 15 halves the feature count
+  max_err_frac: 0.05          # strokes with more held (I2C-failed) samples than this are not scored
+
+energy:
+  k_rest: 1.41                # Slade's standing factor on Mifflin-St Jeor; pick a seated value later
+  rest_timeout_s: 8.0         # no stroke for this long -> bill time at resting power
+  p_max_w: 2500.0             # sanity ceiling; estimates above are capped and flagged
+
+buffer:
+  seconds: 10.0               # filtered-frame ring buffer; must exceed max_stroke_s plus detector delay
+
+# Used when subject.cfg is missing from the SD card.
+subject_defaults:
+  id: S00
+  mass_kg: 70.0
+  height_m: 1.80
+  age: 22
+  sex: M

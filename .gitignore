@@ -1,0 +1,12 @@
+# participant data and outputs stay out of git
+data/
+*.bin
+models/*.npz
+
+# builds
+firmware/.pio/
+firmware/test/native/replay
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.DS_Store

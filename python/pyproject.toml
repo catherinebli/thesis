@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rowing-ee"
+version = "0.1.0"
+description = "Wearable IMU energy expenditure for erg rowing: Python mirror of the Teensy pipeline"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.22", "scipy>=1.8", "pyyaml>=6"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.5"]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+include = ["rowing_ee*"]
