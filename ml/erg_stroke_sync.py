@@ -49,7 +49,7 @@ import pandas as pd
 from scipy import signal
 
 import stroke_detection as sd
-from imu_preprocessing import GYR, estimate_fs
+from imu_preprocessing import GYR, SIGNALS, estimate_fs
 
 PM_TICK_S = 0.5     # resolution of PM5 stroke timestamps
 
@@ -259,6 +259,9 @@ def sync_strokes(clean: pd.DataFrame, erg: pd.DataFrame, fs: float | None = None
         row.update(start_idx=int(s), end_idx=int(e) if e > s else -1,
                    t_catch=t[s], catch_resid_s=t[s] - pred[k])
         rows.append(row)
+    if not rows:
+        raise ValueError("no PM5 stroke could be matched to an IMU catch: check that the two "
+                         "files belong together and the sync (pass offset_s to sync by hand)")
     st = pd.DataFrame(rows)
     has_end = st.end_idx > 0
     st["t_start"] = st.t_catch
@@ -281,14 +284,18 @@ def sync_strokes(clean: pd.DataFrame, erg: pd.DataFrame, fs: float | None = None
 
 def synced_features(clean, strokes, n_bins: int = sd.N_BINS, method: str = "resample",
                     weight=None, height=None,
-                    targets=("watts", "spm", "pace_500m_s", "cal_hr", "hr")):
+                    targets=("watts", "spm", "pace_500m_s", "cal_hr", "hr"), cols=None):
     """Bin valid synced strokes (Slade, 30 bins) and attach erg targets.
 
-    Returns (binned [n x n_bins x 6], table) where table has stroke ids,
-    timing, the 180 binned features and the erg values for each stroke.
+    cols: signal columns to bin (default: the single-IMU ax_mps2 .. gz_rads).
+          For the 5-IMU suit pass multi_imu.suit_columns(...) and the wide frame.
+
+    Returns (binned [n x n_bins x n_cols], table) where table has stroke ids,
+    timing, the binned features (180 for one IMU) and the erg values for each stroke.
     """
-    binned, used = sd.bin_strokes(clean, strokes, n_bins=n_bins, method=method)
-    feats = sd.stroke_features(binned, weight=weight, height=height)
+    cols = list(cols) if cols is not None else list(SIGNALS)
+    binned, used = sd.bin_strokes(clean, strokes, cols=cols, n_bins=n_bins, method=method)
+    feats = sd.stroke_features(binned, cols=cols, weight=weight, height=height)
     meta = used[["erg_stroke", "t_erg", "t_start", "duration_s", "rate_spm"]
                 + [c for c in targets if c in used]].reset_index(drop=True)
     return binned, pd.concat([meta, feats], axis=1)

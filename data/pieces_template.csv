@@ -1,0 +1,2 @@
+subject,piece,intensity,drag_factor,imu_file,pm5_file,offset_s,ref_segment,use,notes
+S01,P1,easy,120,raw/S01/S01_P1_imu.csv,raw/S01/S01_P1_pm5.csv,,,1,

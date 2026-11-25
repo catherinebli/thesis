@@ -1,0 +1,13 @@
+# Participant recordings and generated outputs stay out of git (this repo is public).
+data/*
+!data/README.md
+!data/*_template.csv
+data_synth/
+out/
+out_synth/
+*.csv.part
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
