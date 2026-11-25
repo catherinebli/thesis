@@ -3,8 +3,8 @@
   Teensy 4.1 + 5x Adafruit ICM-20948 + 2x Adafruit 8-channel I2C mux (0x70)
 
   Wiring (Perma-Proto):
-    Mux A (upper body) on Wire : SDA = 18, SCL = 19, 3.3V, GND
-    Mux B (lower body) on Wire1: SDA = 17, SCL = 16, 3.3V, GND
+    Mux A (lower body) on Wire : SDA = 18, SCL = 19, 3.3V, GND  -> A2 thigh, A3 shank
+    Mux B (upper body) on Wire1: SDA = 17, SCL = 16, 3.3V, GND  -> B5 chest, B6 forearm, B7 upper arm
     Both muxes stay at the default 0x70 because they are on separate buses.
     Edit the IMUS[] table below if your channels differ.
 
@@ -34,12 +34,14 @@ struct ImuCfg {
   uint8_t     ch;     // mux channel 0-7 (printed on the mux board)
 };
 
+// Channels from imu_identify's guided check (2026-11-25). The order sets the CSV
+// column order, which the pipeline and trained weights depend on: keep it.
 const ImuCfg IMUS[] = {
-  {"forearm",  &Wire,  0},
-  {"upperarm", &Wire,  1},
-  {"chest",    &Wire,  2},
-  {"thigh",    &Wire1, 0},
-  {"shank",    &Wire1, 1},
+  {"forearm",  &Wire1, 6},
+  {"upperarm", &Wire1, 7},
+  {"chest",    &Wire1, 5},
+  {"thigh",    &Wire,  2},
+  {"shank",    &Wire,  3},
 };
 const uint8_t N_IMU = sizeof(IMUS) / sizeof(IMUS[0]);
 

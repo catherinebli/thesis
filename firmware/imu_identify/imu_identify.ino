@@ -39,11 +39,11 @@ const uint32_t MOVE_MS     = 4000;
 // A finished guided check overwrites bus/ch with what it found.
 struct Segment { const char *name; uint8_t bus; uint8_t ch; const char *how; };
 Segment SEG[] = {
-  {"forearm",  0, 0, "Bend and straighten your ELBOW, over and over. Keep your upper arm still."},
-  {"upperarm", 0, 1, "Swing your whole ARM forward and back from the shoulder, elbow straight."},
-  {"chest",    0, 2, "Lean your TORSO forward and back, a bit quicker than normal."},
-  {"thigh",    1, 0, "Sitting on a chair: lift your KNEE up and down from the hip."},
-  {"shank",    1, 1, "Sitting on a chair: kick your lower leg out and back at the KNEE. "
+  {"forearm",  1, 6, "Bend and straighten your ELBOW, over and over. Keep your upper arm still."},
+  {"upperarm", 1, 7, "Swing your whole ARM forward and back from the shoulder, elbow straight."},
+  {"chest",    1, 5, "Lean your TORSO forward and back, a bit quicker than normal."},
+  {"thigh",    0, 2, "Sitting on a chair: lift your KNEE up and down from the hip."},
+  {"shank",    0, 3, "Sitting on a chair: kick your lower leg out and back at the KNEE. "
                      "Keep your thigh on the seat."},
 };
 const uint8_t N_SEG = sizeof(SEG) / sizeof(SEG[0]);

@@ -36,6 +36,16 @@ Upload `firmware/imu_identify` and open the Serial Monitor. It lists what is on 
 `w` for the guided check, which moves one body part at a time and prints the `IMUS[]` table to paste into
 `firmware/icm20948_mux5/icm20948_mux5.ino` if the wiring doesn't match it.
 
+Current wiring (guided check, 2026-11-25), already set in both sketches:
+
+| IMU | mux | channel |
+|---|---|---|
+| thigh | A (`Wire`, SDA 18 / SCL 19) | 2 |
+| shank | A | 3 |
+| chest | B (`Wire1`, SDA 17 / SCL 16) | 5 |
+| forearm | B | 6 |
+| upper arm (`upperarm`) | B | 7 |
+
 ### Recording a piece
 
 1. Upload `firmware/icm20948_mux5`. Plug the suit into the laptop and close the Arduino Serial
